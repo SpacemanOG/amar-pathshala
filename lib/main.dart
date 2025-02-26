@@ -4,9 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:badges/badges.dart' as badges;
 
-// ======================
-// Brand Colors
-// ======================
+// BRANDCOLORS_001_INITIAL: Official color palette for Amar Pathshala
 class BrandColors {
   static const Color darkTeal = Color(0xFF00332E);
   static const Color teal = Color(0xFF004D40);
@@ -19,18 +17,13 @@ class BrandColors {
   static const Color white = Color(0xFFFFFFFF);
 }
 
-// ======================
-// Main Entry Point
-// ======================
+// MAIN_001_INITIAL: Entry point with Flutter bindings for async operations
 void main() {
-  // Initialize Flutter bindings for async operations
   WidgetsFlutterBinding.ensureInitialized();
   runApp(const AmarPathshalaApp());
 }
 
-// ======================
-// Root App Widget
-// ======================
+// APP_001_INITIAL: Root widget for the Amar Pathshala app
 class AmarPathshalaApp extends StatelessWidget {
   const AmarPathshalaApp({Key? key}) : super(key: key);
 
@@ -78,9 +71,7 @@ class AmarPathshalaApp extends StatelessWidget {
   }
 }
 
-// ======================
-// User State (Singleton)
-// ======================
+// USERSTATE_001_INITIAL: Singleton class to manage user state and persistence
 class UserState {
   static final UserState _instance = UserState._internal();
   factory UserState() => _instance;
@@ -136,7 +127,6 @@ class UserState {
       items = prefs.getStringList('items') ?? items;
     } catch (e) {
       debugPrint('Error loading user state: $e');
-      // Fallback to default values if loading fails
       points = 50;
       tier = 'Explorer';
     }
@@ -231,42 +221,91 @@ class UserState {
   }
 }
 
-// ======================
-// Common AppBar & Drawer
-// ======================
+// APPBAR_001_ICONS_PADDING_UPDATE: Reusable AppBar widget for all screens with larger icons and uniform edge padding
 PreferredSizeWidget buildAppBar(BuildContext context, {String? title}) {
-  return AppBar(
-    backgroundColor: BrandColors.darkTeal,
-    leading: Builder(
-      builder:
-          (context) => IconButton(
-            icon: Icon(Icons.menu, color: BrandColors.white),
-            onPressed: () => Scaffold.of(context).openDrawer(),
+  return PreferredSize(
+    preferredSize: Size.fromHeight(
+      100.0,
+    ), // Increased height for thicker bar (approx. 100px to mimic mobile safe area + content)
+    child: SafeArea(
+      child: Container(
+        color: BrandColors.veryDarkGray, // Changed to veryDarkGray background
+        child: Padding(
+          padding: EdgeInsets.only(
+            top: 24.0,
+          ), // Space for iPhone notch/dynamic island (approx. 24-44px)
+          child: Row(
+            mainAxisAlignment:
+                MainAxisAlignment.spaceBetween, // Uniform spacing with padding
+            children: [
+              Padding(
+                padding: EdgeInsets.only(
+                  left: 24.0,
+                ), // Uniform padding from left edge
+                child: IconButton(
+                  icon: Icon(
+                    Icons.menu,
+                    color: BrandColors.white,
+                    size: 36.0,
+                  ), // Larger icon size
+                  onPressed: () => Scaffold.of(context).openDrawer(),
+                ),
+              ),
+              Expanded(
+                child: Center(
+                  child:
+                      title == null
+                          ? Image.asset(
+                            'assets/logo.png',
+                            height: 60.0, // Larger logo size
+                            fit: BoxFit.contain,
+                          )
+                          : Text(
+                            title,
+                            style: TextStyle(
+                              color: BrandColors.white,
+                              fontSize: 20,
+                            ),
+                          ),
+                ),
+              ),
+              IconButton(
+                icon: Icon(
+                  Icons.settings,
+                  color: BrandColors.white,
+                  size: 36.0,
+                ), // Larger icon size
+                onPressed: () => Navigator.pushNamed(context, '/profile'),
+              ),
+              Padding(
+                padding: EdgeInsets.only(
+                  right: 24.0,
+                ), // Uniform padding from right edge
+                child: badges.Badge(
+                  badgeContent: Text(
+                    '2',
+                    style: TextStyle(color: BrandColors.white),
+                  ),
+                  child: IconButton(
+                    icon: Icon(
+                      Icons.notifications,
+                      color: BrandColors.white,
+                      size: 36.0,
+                    ), // Larger icon size
+                    onPressed:
+                        () => Navigator.pushNamed(context, '/notifications'),
+                  ),
+                ),
+              ),
+            ],
           ),
-    ),
-    title:
-        title == null
-            ? Image.asset('assets/logo.png', height: 30, fit: BoxFit.contain)
-            : Text(
-              title,
-              style: TextStyle(color: BrandColors.white, fontSize: 20),
-            ),
-    actions: [
-      IconButton(
-        icon: Icon(Icons.settings, color: BrandColors.white),
-        onPressed: () => Navigator.pushNamed(context, '/profile'),
-      ),
-      badges.Badge(
-        badgeContent: Text('2', style: TextStyle(color: BrandColors.white)),
-        child: IconButton(
-          icon: Icon(Icons.notifications, color: BrandColors.white),
-          onPressed: () => Navigator.pushNamed(context, '/notifications'),
         ),
       ),
-    ],
+    ),
   );
 }
 
+// DRAWER_001_INITIAL: Reusable Drawer widget for navigation
 Widget buildDrawer(BuildContext context) {
   return Drawer(
     backgroundColor: BrandColors.darkGray,
@@ -323,9 +362,7 @@ Widget buildDrawer(BuildContext context) {
   );
 }
 
-// ======================
-// Home Screen (Sections 2-6)
-// ======================
+// HOMESCREEN_001_INITIAL: Home Screen widget with six sections
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
 
@@ -353,6 +390,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  // HOMESCREEN_002_INITIAL: Circular button widget for navigation
   Widget _buildCircularButton(
     IconData icon,
     String label,
@@ -388,7 +426,81 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: buildAppBar(context),
+      // HOMESCREEN_003_ICONS_PADDING_UPDATE: Thicker AppBar with veryDarkGray background, larger logo, bigger icons, and uniform edge padding, accounting for iPhone notches
+      appBar: PreferredSize(
+        preferredSize: Size.fromHeight(
+          100.0,
+        ), // Increased height for thicker bar (approx. 100px to mimic mobile safe area + content)
+        child: SafeArea(
+          child: Container(
+            color:
+                BrandColors.veryDarkGray, // Changed to veryDarkGray background
+            child: Padding(
+              padding: EdgeInsets.only(
+                top: 24.0,
+              ), // Space for iPhone notch/dynamic island (approx. 24-44px)
+              child: Row(
+                mainAxisAlignment:
+                    MainAxisAlignment
+                        .spaceBetween, // Adjust for uniform padding
+                children: [
+                  Padding(
+                    padding: EdgeInsets.only(
+                      left: 24.0,
+                    ), // More padding from left edge
+                    child: IconButton(
+                      icon: Icon(
+                        Icons.menu,
+                        color: BrandColors.white,
+                        size: 36.0,
+                      ), // Larger icon size
+                      onPressed: () => Scaffold.of(context).openDrawer(),
+                    ),
+                  ),
+                  Expanded(
+                    child: Center(
+                      child: Image.asset(
+                        'assets/logo.png',
+                        height: 60.0, // Keep logo size (already doubled)
+                        fit: BoxFit.contain,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    icon: Icon(
+                      Icons.settings,
+                      color: BrandColors.white,
+                      size: 36.0,
+                    ), // Larger icon size
+                    onPressed: () => Navigator.pushNamed(context, '/profile'),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.only(
+                      right: 24.0,
+                    ), // More padding from right edge
+                    child: badges.Badge(
+                      badgeContent: Text(
+                        '2',
+                        style: TextStyle(color: BrandColors.white),
+                      ),
+                      child: IconButton(
+                        icon: Icon(
+                          Icons.notifications,
+                          color: BrandColors.white,
+                          size: 36.0,
+                        ), // Larger icon size
+                        onPressed:
+                            () =>
+                                Navigator.pushNamed(context, '/notifications'),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
       drawer: buildDrawer(context),
       body: SingleChildScrollView(
         padding: EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
@@ -396,7 +508,7 @@ class _HomeScreenState extends State<HomeScreen> {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             SizedBox(height: 30),
-            // Section 2: Avatar & Greeting
+            // HOMESCREEN_004_INITIAL: Avatar and greeting section (fixed for overflow)
             Card(
               color: BrandColors.veryLightTeal,
               elevation: 8,
@@ -413,32 +525,39 @@ class _HomeScreenState extends State<HomeScreen> {
                       backgroundImage: AssetImage('assets/avatar.png'),
                     ),
                     SizedBox(width: 20),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Hello, Sahar!',
-                          style: TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            color: BrandColors.white,
+                    Expanded(
+                      // HOMESCREEN_004_OVERFLOW_FIX: Prevent RenderFlex overflow by expanding Column
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Hello, Sahar!',
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: BrandColors.white,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
                           ),
-                        ),
-                        Text(
-                          'Ready for more adventures?',
-                          style: TextStyle(
-                            fontSize: 18,
-                            color: BrandColors.white,
+                          Text(
+                            'Ready for more adventures?',
+                            style: TextStyle(
+                              fontSize: 18,
+                              color: BrandColors.white,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ],
                 ),
               ),
             ),
             SizedBox(height: 40),
-            // Section 3: Explore & Learn
+            // HOMESCREEN_005_INITIAL: Explore & Learn section
             Card(
               color: BrandColors.lightTeal,
               elevation: 8,
@@ -494,7 +613,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
             SizedBox(height: 40),
-            // Section 4: Spend Time with Friends
+            // HOMESCREEN_006_INITIAL: Spend Time with Friends section
             Card(
               color: BrandColors.lightTeal,
               elevation: 8,
@@ -550,7 +669,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
             SizedBox(height: 40),
-            // Section 5: Checkout the Gift Shop (Horizontal scrolling promo cards)
+            // HOMESCREEN_007_INITIAL: Checkout the Gift Shop section with horizontal scrolling
             Card(
               color: BrandColors.white,
               elevation: 8,
@@ -591,6 +710,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
       ),
+      // HOMESCREEN_008_INITIAL: Bottom navigation bar for persistent navigation
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: BrandColors.darkTeal,
         selectedItemColor: BrandColors.white,
@@ -610,12 +730,11 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-// ======================
-// Subjects Screen
-// ======================
+// SUBJECTS_001_INITIAL: Subjects Screen widget for displaying learning topics
 class SubjectsScreen extends StatelessWidget {
   const SubjectsScreen({Key? key}) : super(key: key);
 
+  // SUBJECTS_002_INITIAL: Build subject card for grid display
   Widget _buildSubjectCard(
     String title,
     String description,
@@ -654,6 +773,7 @@ class SubjectsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // SUBJECTS_003_INITIAL: App bar with navigation and notifications
       appBar: buildAppBar(context, title: 'Subjects'),
       drawer: buildDrawer(context),
       body: SafeArea(
@@ -703,6 +823,7 @@ class SubjectsScreen extends StatelessWidget {
           ),
         ),
       ),
+      // SUBJECTS_004_INITIAL: Bottom navigation bar for persistent navigation
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: BrandColors.darkTeal,
         selectedItemColor: BrandColors.white,
@@ -734,9 +855,7 @@ class SubjectsScreen extends StatelessWidget {
   }
 }
 
-// ======================
-// Lesson Screen
-// ======================
+// LESSON_001_INITIAL: Lesson Screen widget with AI explanations and quizzes
 class LessonScreen extends StatefulWidget {
   final String subject;
   const LessonScreen({Key? key, required this.subject}) : super(key: key);
@@ -816,6 +935,7 @@ class _LessonScreenState extends State<LessonScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // LESSON_002_INITIAL: App bar with navigation and notifications
       appBar: buildAppBar(context, title: 'Lesson: ${widget.subject}'),
       drawer: buildDrawer(context),
       body: SingleChildScrollView(
@@ -950,6 +1070,7 @@ class _LessonScreenState extends State<LessonScreen> {
           ],
         ),
       ),
+      // LESSON_003_INITIAL: Bottom navigation bar for persistent navigation
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: BrandColors.darkTeal,
         unselectedItemColor: BrandColors.white,
@@ -980,9 +1101,7 @@ class _LessonScreenState extends State<LessonScreen> {
   }
 }
 
-// ======================
-// Buddies Screen
-// ======================
+// BUDDIES_001_INITIAL: Buddies Screen widget for connecting with users
 class BuddiesScreen extends StatefulWidget {
   const BuddiesScreen({Key? key}) : super(key: key);
 
@@ -1040,6 +1159,7 @@ class _BuddiesScreenState extends State<BuddiesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // BUDDIES_002_INITIAL: App bar with navigation and notifications
       appBar: buildAppBar(context, title: 'Study Buddies'),
       drawer: buildDrawer(context),
       body: SingleChildScrollView(
@@ -1096,9 +1216,7 @@ class _BuddiesScreenState extends State<BuddiesScreen> {
                 ElevatedButton(
                   onPressed: swipeLeft,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor:
-                        BrandColors
-                            .teal, // Replaced Colors.red with brand-consistent teal
+                    backgroundColor: BrandColors.teal,
                     padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(25),
@@ -1149,10 +1267,7 @@ class _BuddiesScreenState extends State<BuddiesScreen> {
                       style: TextStyle(color: BrandColors.white),
                     ),
                     trailing: IconButton(
-                      icon: Icon(
-                        Icons.delete,
-                        color: BrandColors.teal,
-                      ), // Replaced Colors.red with brand-consistent teal
+                      icon: Icon(Icons.delete, color: BrandColors.teal),
                       onPressed: () => removeBuddy(buddyName),
                     ),
                   ),
@@ -1255,6 +1370,7 @@ class _BuddiesScreenState extends State<BuddiesScreen> {
           ],
         ),
       ),
+      // BUDDIES_003_INITIAL: Bottom navigation bar for persistent navigation
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: BrandColors.darkTeal,
         unselectedItemColor: BrandColors.white,
@@ -1285,12 +1401,11 @@ class _BuddiesScreenState extends State<BuddiesScreen> {
   }
 }
 
-// ======================
-// Games Screen
-// ======================
+// GAMES_001_INITIAL: Games Screen widget for mini-games
 class GamesScreen extends StatelessWidget {
   const GamesScreen({Key? key}) : super(key: key);
 
+  // GAMES_002_INITIAL: Build game card for grid display
   Widget _buildGameCard(
     String title,
     String description,
@@ -1373,6 +1488,7 @@ class GamesScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // GAMES_003_INITIAL: App bar with navigation and notifications
       appBar: buildAppBar(context, title: 'Mini-Games'),
       drawer: buildDrawer(context),
       body: SingleChildScrollView(
@@ -1415,6 +1531,7 @@ class GamesScreen extends StatelessWidget {
           ],
         ),
       ),
+      // GAMES_004_INITIAL: Bottom navigation bar for persistent navigation
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: BrandColors.darkTeal,
         unselectedItemColor: BrandColors.white,
@@ -1445,9 +1562,7 @@ class GamesScreen extends StatelessWidget {
   }
 }
 
-// ======================
-// Progress Screen
-// ======================
+// PROGRESS_001_INITIAL: Progress Screen widget for user progress tracking
 class ProgressScreen extends StatelessWidget {
   const ProgressScreen({Key? key}) : super(key: key);
 
@@ -1455,6 +1570,7 @@ class ProgressScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final UserState user = UserState();
     return Scaffold(
+      // PROGRESS_002_INITIAL: App bar with navigation and notifications
       appBar: buildAppBar(context, title: 'Dashboard'),
       drawer: buildDrawer(context),
       body: SingleChildScrollView(
@@ -1575,6 +1691,7 @@ class ProgressScreen extends StatelessWidget {
           ],
         ),
       ),
+      // PROGRESS_003_INITIAL: Bottom navigation bar for persistent navigation
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: BrandColors.darkTeal,
         unselectedItemColor: BrandColors.white,
@@ -1605,12 +1722,11 @@ class ProgressScreen extends StatelessWidget {
   }
 }
 
-// ======================
-// Marketplace Screen
-// ======================
+// MARKETPLACE_001_INITIAL: Marketplace Screen widget for purchasing items
 class MarketplaceScreen extends StatelessWidget {
   const MarketplaceScreen({Key? key}) : super(key: key);
 
+  // MARKETPLACE_002_INITIAL: Build marketplace item card for grid display
   Widget _buildMarketplaceItem(
     String title,
     String description,
@@ -1681,6 +1797,7 @@ class MarketplaceScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // MARKETPLACE_003_INITIAL: App bar with navigation and notifications
       appBar: buildAppBar(context, title: 'Marketplace'),
       drawer: buildDrawer(context),
       body: SingleChildScrollView(
@@ -1696,7 +1813,6 @@ class MarketplaceScreen extends StatelessWidget {
               ),
             ),
             SizedBox(height: 20),
-            // Horizontal promo cards
             SizedBox(
               height: 140,
               child: ListView.builder(
@@ -1761,6 +1877,7 @@ class MarketplaceScreen extends StatelessWidget {
           ],
         ),
       ),
+      // MARKETPLACE_004_INITIAL: Bottom navigation bar for persistent navigation
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: BrandColors.darkTeal,
         unselectedItemColor: BrandColors.white,
@@ -1791,9 +1908,7 @@ class MarketplaceScreen extends StatelessWidget {
   }
 }
 
-// ======================
-// Study Room Screen
-// ======================
+// STUDYROOM_001_INITIAL: Study Room Screen widget for displaying user achievements
 class StudyRoomScreen extends StatelessWidget {
   const StudyRoomScreen({Key? key}) : super(key: key);
 
@@ -1801,6 +1916,7 @@ class StudyRoomScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final UserState user = UserState();
     return Scaffold(
+      // STUDYROOM_002_INITIAL: App bar with navigation and notifications
       appBar: buildAppBar(context, title: 'Study Room'),
       drawer: buildDrawer(context),
       body: SingleChildScrollView(
@@ -1897,6 +2013,7 @@ class StudyRoomScreen extends StatelessWidget {
           ],
         ),
       ),
+      // STUDYROOM_003_INITIAL: Bottom navigation bar for persistent navigation
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: BrandColors.darkTeal,
         unselectedItemColor: BrandColors.white,
@@ -1927,9 +2044,7 @@ class StudyRoomScreen extends StatelessWidget {
   }
 }
 
-// ======================
-// Placeholder Screen for Unimplemented Routes
-// ======================
+// PLACEHOLDER_001_INITIAL: Placeholder Screen for unimplemented routes
 class PlaceholderScreen extends StatelessWidget {
   final String title;
   const PlaceholderScreen({Key? key, required this.title}) : super(key: key);
@@ -1937,6 +2052,7 @@ class PlaceholderScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // PLACEHOLDER_002_INITIAL: App bar with navigation and notifications
       appBar: buildAppBar(context, title: title),
       drawer: buildDrawer(context),
       body: Center(
