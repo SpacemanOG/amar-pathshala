@@ -17,13 +17,13 @@ class BrandColors {
   static const Color white = Color(0xFFFFFFFF);
 }
 
-// MAIN_001_INITIAL: Entry point with Flutter bindings for async operations
+// MAIN_001_INITIAL: Entry point with Flutter bindings
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   runApp(const AmarPathshalaApp());
 }
 
-// APP_001_INITIAL: Root widget for the Amar Pathshala app
+// APP_001_INITIAL: Root widget for the Amar Pathshala app in Light Theme
 class AmarPathshalaApp extends StatelessWidget {
   const AmarPathshalaApp({Key? key}) : super(key: key);
 
@@ -31,12 +31,12 @@ class AmarPathshalaApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Amar Pathshala',
-      theme: ThemeData.dark().copyWith(
+      theme: ThemeData.light().copyWith(
         primaryColor: BrandColors.darkTeal,
-        scaffoldBackgroundColor: BrandColors.veryDarkGray,
-        cardColor: BrandColors.darkGray,
-        buttonTheme: ButtonThemeData(
-          buttonColor: BrandColors.lightTeal,
+        scaffoldBackgroundColor: BrandColors.veryLightTeal,
+        cardColor: BrandColors.white,
+        buttonTheme: const ButtonThemeData(
+          buttonColor: BrandColors.teal,
           textTheme: ButtonTextTheme.primary,
         ),
       ),
@@ -45,9 +45,8 @@ class AmarPathshalaApp extends StatelessWidget {
         '/home': (context) => const HomeScreen(),
         '/subjects': (context) => const SubjectsScreen(),
         '/lesson': (context) {
-          final args = ModalRoute.of(context)?.settings.arguments;
-          final subject = args is String ? args : 'Unknown Subject';
-          return LessonScreen(subject: subject);
+          final args = ModalRoute.of(context)?.settings.arguments as String?;
+          return LessonScreen(subject: args ?? 'Unknown Subject');
         },
         '/buddies': (context) => const BuddiesScreen(),
         '/games': (context) => const GamesScreen(),
@@ -62,48 +61,22 @@ class AmarPathshalaApp extends StatelessWidget {
         '/play': (context) => const PlaceholderScreen(title: 'Play'),
         '/talk': (context) => const PlaceholderScreen(title: 'Talk'),
         '/gift-shop': (context) => const PlaceholderScreen(title: 'Gift Shop'),
-        '/dashboard': (context) => const PlaceholderScreen(title: 'Dashboard'),
         '/profile': (context) => const PlaceholderScreen(title: 'Profile'),
         '/notifications':
             (context) => const PlaceholderScreen(title: 'Notifications'),
+        '/dashboard': (context) => const PlaceholderScreen(title: 'Dashboard'),
       },
     );
   }
 }
 
-// USERSTATE_001_INITIAL: Singleton class to manage user state and persistence
+// USERSTATE_001_INITIAL: Singleton for managing user state and persistence
 class UserState {
   static final UserState _instance = UserState._internal();
   factory UserState() => _instance;
 
   int points = 50;
   String tier = 'Explorer';
-  List<Map<String, dynamic>> buddies = [
-    {
-      'name': 'Amina',
-      'interests': 'Physics, 21st Century Skills',
-      'points': 300,
-      'status': 'Online',
-    },
-    {
-      'name': 'Rahim',
-      'interests': 'Entrepreneurial Thinking, Civic Responsibilities',
-      'points': 450,
-      'status': 'Offline',
-    },
-    {
-      'name': 'Fatima',
-      'interests': 'Physics, Digital Literacy',
-      'points': 200,
-      'status': 'Online',
-    },
-    {
-      'name': 'Nurul',
-      'interests': 'Civic Responsibilities, Critical Thinking',
-      'points': 350,
-      'status': 'Offline',
-    },
-  ];
   List<String> achievements = ['Completed 3 Lessons', 'Earned 50 Points'];
   List<String> items = ['Golden Badge'];
 
@@ -116,19 +89,10 @@ class UserState {
       final prefs = await SharedPreferences.getInstance();
       points = prefs.getInt('points') ?? 50;
       tier = _calculateTier();
-      String? buddiesString = prefs.getString('buddies');
-      if (buddiesString != null) {
-        buddies =
-            (jsonDecode(buddiesString) as List)
-                .map((item) => Map<String, dynamic>.from(item))
-                .toList();
-      }
       achievements = prefs.getStringList('achievements') ?? achievements;
       items = prefs.getStringList('items') ?? items;
     } catch (e) {
       debugPrint('Error loading user state: $e');
-      points = 50;
-      tier = 'Explorer';
     }
   }
 
@@ -146,215 +110,171 @@ class UserState {
       tier = _calculateTier();
       final prefs = await SharedPreferences.getInstance();
       await prefs.setInt('points', points);
-      await prefs.setString('buddies', jsonEncode(buddies));
       await prefs.setStringList('achievements', achievements);
       await prefs.setStringList('items', items);
     } catch (e) {
       debugPrint('Error updating points: $e');
-      throw Exception('Failed to update points: $e');
-    }
-  }
-
-  Future<void> addBuddy(Map<String, dynamic> buddy) async {
-    try {
-      if (!buddies.any((b) => b['name'] == buddy['name']) && points >= 20) {
-        buddies.add(buddy);
-        await updatePoints(-20);
-      } else {
-        throw Exception('Not enough points or buddy already added!');
-      }
-    } catch (e) {
-      debugPrint('Error adding buddy: $e');
-      throw Exception('Failed to add buddy: $e');
-    }
-  }
-
-  Future<void> removeBuddy(String buddyName) async {
-    try {
-      buddies.removeWhere((b) => b['name'] == buddyName);
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('buddies', jsonEncode(buddies));
-    } catch (e) {
-      debugPrint('Error removing buddy: $e');
-      throw Exception('Failed to remove buddy: $e');
     }
   }
 
   Future<void> addAchievement(String achievement) async {
-    try {
-      if (!achievements.contains(achievement)) {
-        achievements.add(achievement);
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setStringList('achievements', achievements);
-      }
-    } catch (e) {
-      debugPrint('Error adding achievement: $e');
-      throw Exception('Failed to add achievement: $e');
+    if (!achievements.contains(achievement)) {
+      achievements.add(achievement);
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setStringList('achievements', achievements);
     }
   }
 
   Future<void> addItem(String item) async {
-    try {
-      if (points >= 50) {
-        items.add(item);
-        await updatePoints(-50);
-      } else {
-        throw Exception('Not enough points!');
-      }
-    } catch (e) {
-      debugPrint('Error adding item: $e');
-      throw Exception('Failed to add item: $e');
+    if (points >= 50) {
+      items.add(item);
+      await updatePoints(-50);
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setStringList('items', items);
+    } else {
+      throw Exception('Not enough points!');
     }
   }
 
   Future<void> playGame(String game, int cost, int reward) async {
-    try {
-      if (points >= cost) {
-        await updatePoints(-cost + reward);
-      } else {
-        throw Exception('Not enough points to play!');
-      }
-    } catch (e) {
-      debugPrint('Error playing game: $e');
-      throw Exception('Failed to play game: $e');
+    if (points >= cost) {
+      await updatePoints(-cost + reward);
+    } else {
+      throw Exception('Not enough points to play!');
     }
   }
 }
 
-// APPBAR_001_ICONS_PADDING_UPDATE: Reusable AppBar widget for all screens with larger icons and uniform edge padding
+// APPBAR_001_LIGHT_THEME_UPDATE: Custom AppBar for Light Theme with hamburger fix
 PreferredSizeWidget buildAppBar(BuildContext context, {String? title}) {
+  final statusBarHeight = MediaQuery.of(context).padding.top;
   return PreferredSize(
-    preferredSize: Size.fromHeight(
-      100.0,
-    ), // Increased height for thicker bar (approx. 100px to mimic mobile safe area + content)
+    preferredSize: Size.fromHeight(80 + statusBarHeight),
     child: SafeArea(
       child: Container(
-        color: BrandColors.veryDarkGray, // Changed to veryDarkGray background
-        child: Padding(
-          padding: EdgeInsets.only(
-            top: 24.0,
-          ), // Space for iPhone notch/dynamic island (approx. 24-44px)
-          child: Row(
-            mainAxisAlignment:
-                MainAxisAlignment.spaceBetween, // Uniform spacing with padding
-            children: [
-              Padding(
-                padding: EdgeInsets.only(
-                  left: 24.0,
-                ), // Uniform padding from left edge
-                child: IconButton(
-                  icon: Icon(
-                    Icons.menu,
+        color: BrandColors.darkTeal,
+        padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 16.0),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Builder(
+              builder:
+                  (context) => IconButton(
+                    icon: const Icon(
+                      Icons.menu,
+                      color: BrandColors.white,
+                      size: 30,
+                    ),
+                    onPressed: () => Scaffold.of(context).openDrawer(),
+                  ),
+            ),
+            if (title == null)
+              Image.asset('assets/logo.png', height: 40, fit: BoxFit.contain)
+            else
+              Text(
+                title,
+                style: const TextStyle(color: BrandColors.white, fontSize: 20),
+              ),
+            Row(
+              children: [
+                IconButton(
+                  icon: const Icon(
+                    Icons.settings,
                     color: BrandColors.white,
-                    size: 36.0,
-                  ), // Larger icon size
-                  onPressed: () => Scaffold.of(context).openDrawer(),
+                    size: 30,
+                  ),
+                  onPressed: () => Navigator.pushNamed(context, '/profile'),
                 ),
-              ),
-              Expanded(
-                child: Center(
-                  child:
-                      title == null
-                          ? Image.asset(
-                            'assets/logo.png',
-                            height: 60.0, // Larger logo size
-                            fit: BoxFit.contain,
-                          )
-                          : Text(
-                            title,
-                            style: TextStyle(
-                              color: BrandColors.white,
-                              fontSize: 20,
-                            ),
-                          ),
-                ),
-              ),
-              IconButton(
-                icon: Icon(
-                  Icons.settings,
-                  color: BrandColors.white,
-                  size: 36.0,
-                ), // Larger icon size
-                onPressed: () => Navigator.pushNamed(context, '/profile'),
-              ),
-              Padding(
-                padding: EdgeInsets.only(
-                  right: 24.0,
-                ), // Uniform padding from right edge
-                child: badges.Badge(
-                  badgeContent: Text(
+                badges.Badge(
+                  badgeContent: const Text(
                     '2',
                     style: TextStyle(color: BrandColors.white),
                   ),
                   child: IconButton(
-                    icon: Icon(
+                    icon: const Icon(
                       Icons.notifications,
                       color: BrandColors.white,
-                      size: 36.0,
-                    ), // Larger icon size
+                      size: 30,
+                    ),
                     onPressed:
                         () => Navigator.pushNamed(context, '/notifications'),
                   ),
                 ),
-              ),
-            ],
-          ),
+              ],
+            ),
+          ],
         ),
       ),
     ),
   );
 }
 
-// DRAWER_001_INITIAL: Reusable Drawer widget for navigation
+// DRAWER_001_SHARP_CORNERS_UPDATE: Reusable Drawer with sharp corners
 Widget buildDrawer(BuildContext context) {
   return Drawer(
+    shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
     backgroundColor: BrandColors.darkGray,
     child: ListView(
       padding: EdgeInsets.zero,
       children: [
         DrawerHeader(
-          decoration: BoxDecoration(color: BrandColors.darkTeal),
-          child: Text(
+          decoration: const BoxDecoration(color: BrandColors.darkTeal),
+          child: const Text(
             'Amar Pathshala',
             style: TextStyle(color: BrandColors.white, fontSize: 24),
           ),
         ),
         ListTile(
-          leading: Icon(Icons.home, color: BrandColors.white),
-          title: Text('Home', style: TextStyle(color: BrandColors.white)),
+          leading: const Icon(Icons.home, color: BrandColors.white),
+          title: const Text('Home', style: TextStyle(color: BrandColors.white)),
           onTap: () => Navigator.pushReplacementNamed(context, '/home'),
         ),
         ListTile(
-          leading: Icon(Icons.book, color: BrandColors.white),
-          title: Text('Subjects', style: TextStyle(color: BrandColors.white)),
+          leading: const Icon(Icons.book, color: BrandColors.white),
+          title: const Text(
+            'Subjects',
+            style: TextStyle(color: BrandColors.white),
+          ),
           onTap: () => Navigator.pushReplacementNamed(context, '/subjects'),
         ),
         ListTile(
-          leading: Icon(Icons.people, color: BrandColors.white),
-          title: Text('Buddies', style: TextStyle(color: BrandColors.white)),
+          leading: const Icon(Icons.people, color: BrandColors.white),
+          title: const Text(
+            'Buddies',
+            style: TextStyle(color: BrandColors.white),
+          ),
           onTap: () => Navigator.pushReplacementNamed(context, '/buddies'),
         ),
         ListTile(
-          leading: Icon(Icons.videogame_asset, color: BrandColors.white),
-          title: Text('Games', style: TextStyle(color: BrandColors.white)),
+          leading: const Icon(Icons.videogame_asset, color: BrandColors.white),
+          title: const Text(
+            'Games',
+            style: TextStyle(color: BrandColors.white),
+          ),
           onTap: () => Navigator.pushReplacementNamed(context, '/games'),
         ),
         ListTile(
-          leading: Icon(Icons.bar_chart, color: BrandColors.white),
-          title: Text('Progress', style: TextStyle(color: BrandColors.white)),
+          leading: const Icon(Icons.bar_chart, color: BrandColors.white),
+          title: const Text(
+            'Progress',
+            style: TextStyle(color: BrandColors.white),
+          ),
           onTap: () => Navigator.pushReplacementNamed(context, '/progress'),
         ),
         ListTile(
-          leading: Icon(Icons.store, color: BrandColors.white),
-          title: Text(
+          leading: const Icon(Icons.store, color: BrandColors.white),
+          title: const Text(
             'Marketplace',
             style: TextStyle(color: BrandColors.white),
           ),
           onTap: () => Navigator.pushReplacementNamed(context, '/marketplace'),
         ),
         ListTile(
-          leading: Icon(Icons.school, color: BrandColors.white),
-          title: Text('Study Room', style: TextStyle(color: BrandColors.white)),
+          leading: const Icon(Icons.school, color: BrandColors.white),
+          title: const Text(
+            'Study Room',
+            style: TextStyle(color: BrandColors.white),
+          ),
           onTap: () => Navigator.pushReplacementNamed(context, '/studyroom'),
         ),
       ],
@@ -362,7 +282,7 @@ Widget buildDrawer(BuildContext context) {
   );
 }
 
-// HOMESCREEN_001_INITIAL: Home Screen widget with six sections
+// HOMESCREEN_001_LIGHT_THEME_UPDATE: Home Screen in Light Theme
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
 
@@ -371,12 +291,10 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  int _selectedIndex = 0; // For bottom navigation
+  int _selectedIndex = 0;
 
   void _onBottomNavTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
+    setState(() => _selectedIndex = index);
     switch (index) {
       case 0:
         Navigator.pushReplacementNamed(context, '/home');
@@ -385,17 +303,18 @@ class _HomeScreenState extends State<HomeScreen> {
         Navigator.pushReplacementNamed(context, '/progress');
         break;
       case 2:
-        Navigator.pushReplacementNamed(context, '/studyroom');
+        Navigator.pushReplacementNamed(context, '/profile');
         break;
     }
   }
 
-  // HOMESCREEN_002_INITIAL: Circular button widget for navigation
+  // HOMESCREEN_002_TEXTCOLOR_UPDATE: Reusable circular button with dynamic text color
   Widget _buildCircularButton(
     IconData icon,
     String label,
     BuildContext context,
     String route,
+    Color textColor,
   ) {
     return Column(
       children: [
@@ -403,18 +322,18 @@ class _HomeScreenState extends State<HomeScreen> {
           onPressed: () => Navigator.pushNamed(context, route),
           style: ElevatedButton.styleFrom(
             backgroundColor: BrandColors.teal,
-            shape: CircleBorder(),
-            padding: EdgeInsets.all(20),
-            minimumSize: Size(80, 80),
+            shape: const CircleBorder(),
+            padding: const EdgeInsets.all(20),
+            minimumSize: const Size(80, 80),
             elevation: 8,
           ),
           child: Icon(icon, color: BrandColors.white, size: 40),
         ),
-        SizedBox(height: 10),
+        const SizedBox(height: 10),
         Text(
           label,
           style: TextStyle(
-            color: BrandColors.white,
+            color: textColor,
             fontSize: 16,
             fontWeight: FontWeight.bold,
           ),
@@ -426,146 +345,65 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // HOMESCREEN_003_ICONS_PADDING_UPDATE: Thicker AppBar with veryDarkGray background, larger logo, bigger icons, and uniform edge padding, accounting for iPhone notches
-      appBar: PreferredSize(
-        preferredSize: Size.fromHeight(
-          100.0,
-        ), // Increased height for thicker bar (approx. 100px to mimic mobile safe area + content)
-        child: SafeArea(
-          child: Container(
-            color:
-                BrandColors.veryDarkGray, // Changed to veryDarkGray background
-            child: Padding(
-              padding: EdgeInsets.only(
-                top: 24.0,
-              ), // Space for iPhone notch/dynamic island (approx. 24-44px)
+      backgroundColor: BrandColors.veryLightTeal,
+      appBar: buildAppBar(context),
+      drawer: buildDrawer(context),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            const SizedBox(height: 20),
+            // HOMESCREEN_003_AVATAR_GREETING: Section 2 - Avatar and Greeting
+            Padding(
+              padding: const EdgeInsets.all(20),
               child: Row(
-                mainAxisAlignment:
-                    MainAxisAlignment
-                        .spaceBetween, // Adjust for uniform padding
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Padding(
-                    padding: EdgeInsets.only(
-                      left: 24.0,
-                    ), // More padding from left edge
-                    child: IconButton(
-                      icon: Icon(
-                        Icons.menu,
-                        color: BrandColors.white,
-                        size: 36.0,
-                      ), // Larger icon size
-                      onPressed: () => Scaffold.of(context).openDrawer(),
-                    ),
+                  const CircleAvatar(
+                    radius: 30,
+                    backgroundImage: AssetImage('assets/avatar.png'),
                   ),
+                  const SizedBox(width: 20),
                   Expanded(
-                    child: Center(
-                      child: Image.asset(
-                        'assets/logo.png',
-                        height: 60.0, // Keep logo size (already doubled)
-                        fit: BoxFit.contain,
-                      ),
-                    ),
-                  ),
-                  IconButton(
-                    icon: Icon(
-                      Icons.settings,
-                      color: BrandColors.white,
-                      size: 36.0,
-                    ), // Larger icon size
-                    onPressed: () => Navigator.pushNamed(context, '/profile'),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.only(
-                      right: 24.0,
-                    ), // More padding from right edge
-                    child: badges.Badge(
-                      badgeContent: Text(
-                        '2',
-                        style: TextStyle(color: BrandColors.white),
-                      ),
-                      child: IconButton(
-                        icon: Icon(
-                          Icons.notifications,
-                          color: BrandColors.white,
-                          size: 36.0,
-                        ), // Larger icon size
-                        onPressed:
-                            () =>
-                                Navigator.pushNamed(context, '/notifications'),
-                      ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Hello, Sahar!',
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: BrandColors.veryDarkGray,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                        ),
+                        Text(
+                          'Ready for more adventures?',
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: BrandColors.veryDarkGray,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                        ),
+                      ],
                     ),
                   ),
                 ],
               ),
             ),
-          ),
-        ),
-      ),
-      drawer: buildDrawer(context),
-      body: SingleChildScrollView(
-        padding: EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            SizedBox(height: 30),
-            // HOMESCREEN_004_INITIAL: Avatar and greeting section (fixed for overflow)
+            const SizedBox(height: 40),
+            // HOMESCREEN_004_EXPLORE_LEARN: Section 3 - Explore & Learn
             Card(
-              color: BrandColors.veryLightTeal,
+              color: BrandColors.white,
               elevation: 8,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Padding(
-                padding: EdgeInsets.all(20.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    CircleAvatar(
-                      radius: 30,
-                      backgroundImage: AssetImage('assets/avatar.png'),
-                    ),
-                    SizedBox(width: 20),
-                    Expanded(
-                      // HOMESCREEN_004_OVERFLOW_FIX: Prevent RenderFlex overflow by expanding Column
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Hello, Sahar!',
-                            style: TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                              color: BrandColors.white,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                            maxLines: 1,
-                          ),
-                          Text(
-                            'Ready for more adventures?',
-                            style: TextStyle(
-                              fontSize: 18,
-                              color: BrandColors.white,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                            maxLines: 1,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            SizedBox(height: 40),
-            // HOMESCREEN_005_INITIAL: Explore & Learn section
-            Card(
-              color: BrandColors.lightTeal,
-              elevation: 8,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Padding(
-                padding: EdgeInsets.all(20.0),
+                padding: const EdgeInsets.all(20),
                 child: Column(
                   children: [
                     Text(
@@ -573,10 +411,10 @@ class _HomeScreenState extends State<HomeScreen> {
                       style: TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.bold,
-                        color: BrandColors.white,
+                        color: BrandColors.veryDarkGray,
                       ),
                     ),
-                    SizedBox(height: 20),
+                    const SizedBox(height: 20),
                     Wrap(
                       spacing: 20,
                       runSpacing: 20,
@@ -587,24 +425,28 @@ class _HomeScreenState extends State<HomeScreen> {
                           'Topics',
                           context,
                           '/subjects',
+                          BrandColors.veryDarkGray,
                         ),
                         _buildCircularButton(
                           Icons.bolt,
                           'Challenges',
                           context,
                           '/challenges',
+                          BrandColors.veryDarkGray,
                         ),
                         _buildCircularButton(
                           Icons.bookmark,
                           'Bookmarks',
                           context,
                           '/bookmarks',
+                          BrandColors.veryDarkGray,
                         ),
                         _buildCircularButton(
                           Icons.lightbulb,
                           'AI Tutor',
                           context,
                           '/ai-tutor',
+                          BrandColors.veryDarkGray,
                         ),
                       ],
                     ),
@@ -612,16 +454,16 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
             ),
-            SizedBox(height: 40),
-            // HOMESCREEN_006_INITIAL: Spend Time with Friends section
+            const SizedBox(height: 40),
+            // HOMESCREEN_005_SPEND_WITH_FRIENDS: Section 4 - Spend Time with Friends
             Card(
-              color: BrandColors.lightTeal,
+              color: BrandColors.white,
               elevation: 8,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Padding(
-                padding: EdgeInsets.all(20.0),
+                padding: const EdgeInsets.all(20),
                 child: Column(
                   children: [
                     Text(
@@ -629,10 +471,10 @@ class _HomeScreenState extends State<HomeScreen> {
                       style: TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.bold,
-                        color: BrandColors.white,
+                        color: BrandColors.veryDarkGray,
                       ),
                     ),
-                    SizedBox(height: 20),
+                    const SizedBox(height: 20),
                     Wrap(
                       spacing: 20,
                       runSpacing: 20,
@@ -643,24 +485,28 @@ class _HomeScreenState extends State<HomeScreen> {
                           'Connect',
                           context,
                           '/connect',
+                          BrandColors.veryDarkGray,
                         ),
                         _buildCircularButton(
                           Icons.play_arrow,
                           'Play',
                           context,
                           '/play',
+                          BrandColors.veryDarkGray,
                         ),
                         _buildCircularButton(
                           Icons.chat,
                           'Talk',
                           context,
                           '/talk',
+                          BrandColors.veryDarkGray,
                         ),
                         _buildCircularButton(
                           Icons.card_giftcard,
                           'Gift',
                           context,
                           '/gift-shop',
+                          BrandColors.veryDarkGray,
                         ),
                       ],
                     ),
@@ -668,8 +514,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
             ),
-            SizedBox(height: 40),
-            // HOMESCREEN_007_INITIAL: Checkout the Gift Shop section with horizontal scrolling
+            const SizedBox(height: 40),
+            // HOMESCREEN_006_GIFTSHOP: Section 5 - Checkout the Gift Shop
             Card(
               color: BrandColors.white,
               elevation: 8,
@@ -680,16 +526,16 @@ class _HomeScreenState extends State<HomeScreen> {
                 onTap: () => Navigator.pushNamed(context, '/gift-shop'),
                 child: Container(
                   height: 150,
-                  padding: EdgeInsets.all(20.0),
+                  padding: const EdgeInsets.all(20),
                   child: ListView.builder(
                     scrollDirection: Axis.horizontal,
                     itemCount: 5,
                     itemBuilder: (context, index) {
                       return Container(
                         width: 200,
-                        margin: EdgeInsets.only(right: 16.0),
+                        margin: const EdgeInsets.only(right: 16),
                         decoration: BoxDecoration(
-                          color: BrandColors.lightTeal,
+                          color: BrandColors.white,
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Center(
@@ -710,7 +556,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
       ),
-      // HOMESCREEN_008_INITIAL: Bottom navigation bar for persistent navigation
+      // HOMESCREEN_007_BOTTOMNAV: Bottom navigation bar for persistent navigation
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: BrandColors.darkTeal,
         selectedItemColor: BrandColors.white,
@@ -720,8 +566,8 @@ class _HomeScreenState extends State<HomeScreen> {
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
           BottomNavigationBarItem(
-            icon: Icon(Icons.dashboard),
-            label: 'Dashboard',
+            icon: Icon(Icons.bar_chart),
+            label: 'Progress',
           ),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
         ],
@@ -730,11 +576,10 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-// SUBJECTS_001_INITIAL: Subjects Screen widget for displaying learning topics
+// SUBJECTS_001_INITIAL: Subjects Screen widget
 class SubjectsScreen extends StatelessWidget {
   const SubjectsScreen({Key? key}) : super(key: key);
 
-  // SUBJECTS_002_INITIAL: Build subject card for grid display
   Widget _buildSubjectCard(
     String title,
     String description,
@@ -746,22 +591,25 @@ class SubjectsScreen extends StatelessWidget {
       child: InkWell(
         onTap: () => Navigator.pushNamed(context, '/lesson', arguments: title),
         child: Padding(
-          padding: EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 title,
-                style: TextStyle(
+                style: const TextStyle(
                   color: BrandColors.white,
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              SizedBox(height: 8),
+              const SizedBox(height: 8),
               Text(
                 description,
-                style: TextStyle(color: BrandColors.lightGray, fontSize: 14),
+                style: const TextStyle(
+                  color: BrandColors.lightGray,
+                  fontSize: 14,
+                ),
               ),
             ],
           ),
@@ -773,27 +621,26 @@ class SubjectsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // SUBJECTS_003_INITIAL: App bar with navigation and notifications
       appBar: buildAppBar(context, title: 'Subjects'),
       drawer: buildDrawer(context),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(16),
           child: Column(
             children: [
-              Text(
+              const Text(
                 'Explore Topics',
                 style: TextStyle(
                   fontSize: 24,
-                  color: BrandColors.white,
+                  color: BrandColors.veryDarkGray,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               GridView.count(
                 crossAxisCount: 1,
                 shrinkWrap: true,
-                physics: NeverScrollableScrollPhysics(),
+                physics: const NeverScrollableScrollPhysics(),
                 crossAxisSpacing: 10,
                 mainAxisSpacing: 10,
                 children: [
@@ -823,7 +670,6 @@ class SubjectsScreen extends StatelessWidget {
           ),
         ),
       ),
-      // SUBJECTS_004_INITIAL: Bottom navigation bar for persistent navigation
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: BrandColors.darkTeal,
         selectedItemColor: BrandColors.white,
@@ -838,15 +684,15 @@ class SubjectsScreen extends StatelessWidget {
               Navigator.pushReplacementNamed(context, '/progress');
               break;
             case 2:
-              Navigator.pushReplacementNamed(context, '/studyroom');
+              Navigator.pushReplacementNamed(context, '/profile');
               break;
           }
         },
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
           BottomNavigationBarItem(
-            icon: Icon(Icons.dashboard),
-            label: 'Dashboard',
+            icon: Icon(Icons.bar_chart),
+            label: 'Progress',
           ),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
         ],
@@ -890,14 +736,10 @@ class _LessonScreenState extends State<LessonScreen> {
       );
       return;
     }
-    setState(() {
-      aiResponse = 'Thinking...';
-    });
-    await Future.delayed(Duration(seconds: 1));
+    setState(() => aiResponse = 'Thinking...');
+    await Future.delayed(const Duration(seconds: 1));
     if (!mounted) return;
-    setState(() {
-      aiResponse = questions[currentQuestionIndex]['answer']!;
-    });
+    setState(() => aiResponse = questions[currentQuestionIndex]['answer']!);
     await user.updatePoints(-5);
   }
 
@@ -935,46 +777,51 @@ class _LessonScreenState extends State<LessonScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // LESSON_002_INITIAL: App bar with navigation and notifications
       appBar: buildAppBar(context, title: 'Lesson: ${widget.subject}'),
       drawer: buildDrawer(context),
       body: SingleChildScrollView(
-        padding: EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               'Lesson: ${widget.subject} Basics',
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 24,
                 color: BrandColors.white,
                 fontWeight: FontWeight.bold,
               ),
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             Text(
               'Explore motion and forces with curated questions...',
-              style: TextStyle(color: BrandColors.lightGray, fontSize: 16),
+              style: const TextStyle(
+                color: BrandColors.lightGray,
+                fontSize: 16,
+              ),
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             Card(
               color: BrandColors.darkGray,
               elevation: 4,
               child: Padding(
-                padding: EdgeInsets.all(16.0),
+                padding: const EdgeInsets.all(16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       'Question ${currentQuestionIndex + 1}: ${questions[currentQuestionIndex]['question']}',
-                      style: TextStyle(color: BrandColors.white, fontSize: 18),
+                      style: const TextStyle(
+                        color: BrandColors.white,
+                        fontSize: 18,
+                      ),
                     ),
-                    SizedBox(height: 10),
+                    const SizedBox(height: 10),
                     ElevatedButton(
                       onPressed: getAIAnswer,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: BrandColors.lightTeal,
-                        padding: EdgeInsets.symmetric(
+                        padding: const EdgeInsets.symmetric(
                           vertical: 12,
                           horizontal: 24,
                         ),
@@ -982,7 +829,7 @@ class _LessonScreenState extends State<LessonScreen> {
                           borderRadius: BorderRadius.circular(25),
                         ),
                       ),
-                      child: Text(
+                      child: const Text(
                         'Get AI Answer (5 points)',
                         style: TextStyle(
                           color: BrandColors.white,
@@ -990,10 +837,10 @@ class _LessonScreenState extends State<LessonScreen> {
                         ),
                       ),
                     ),
-                    SizedBox(height: 10),
+                    const SizedBox(height: 10),
                     Text(
                       aiResponse,
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: BrandColors.lightGray,
                         fontSize: 16,
                       ),
@@ -1002,16 +849,16 @@ class _LessonScreenState extends State<LessonScreen> {
                 ),
               ),
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             Card(
               color: BrandColors.darkGray,
               elevation: 4,
               child: Padding(
-                padding: EdgeInsets.all(16.0),
+                padding: const EdgeInsets.all(16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
+                    const Text(
                       'Quiz',
                       style: TextStyle(
                         color: BrandColors.white,
@@ -1019,12 +866,14 @@ class _LessonScreenState extends State<LessonScreen> {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    SizedBox(height: 10),
+                    const SizedBox(height: 10),
                     TextField(
                       controller: _quizController,
                       decoration: InputDecoration(
                         hintText: 'Your answer',
-                        hintStyle: TextStyle(color: BrandColors.lightGray),
+                        hintStyle: const TextStyle(
+                          color: BrandColors.lightGray,
+                        ),
                         filled: true,
                         fillColor: BrandColors.mediumGray,
                         border: OutlineInputBorder(
@@ -1039,15 +888,15 @@ class _LessonScreenState extends State<LessonScreen> {
                           borderSide: BorderSide(color: BrandColors.lightTeal),
                         ),
                       ),
-                      style: TextStyle(color: BrandColors.white),
+                      style: const TextStyle(color: BrandColors.white),
                       onSubmitted: (_) => submitQuiz(),
                     ),
-                    SizedBox(height: 10),
+                    const SizedBox(height: 10),
                     ElevatedButton(
                       onPressed: submitQuiz,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: BrandColors.lightTeal,
-                        padding: EdgeInsets.symmetric(
+                        padding: const EdgeInsets.symmetric(
                           vertical: 12,
                           horizontal: 24,
                         ),
@@ -1055,7 +904,7 @@ class _LessonScreenState extends State<LessonScreen> {
                           borderRadius: BorderRadius.circular(25),
                         ),
                       ),
-                      child: Text(
+                      child: const Text(
                         'Submit & Earn Points',
                         style: TextStyle(
                           color: BrandColors.white,
@@ -1070,11 +919,10 @@ class _LessonScreenState extends State<LessonScreen> {
           ],
         ),
       ),
-      // LESSON_003_INITIAL: Bottom navigation bar for persistent navigation
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: BrandColors.darkTeal,
-        unselectedItemColor: BrandColors.white,
-        selectedItemColor: BrandColors.lightTeal,
+        selectedItemColor: BrandColors.white,
+        unselectedItemColor: BrandColors.lightGray,
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
           BottomNavigationBarItem(
@@ -1092,7 +940,7 @@ class _LessonScreenState extends State<LessonScreen> {
               Navigator.pushReplacementNamed(context, '/progress');
               break;
             case 2:
-              Navigator.pushReplacementNamed(context, '/studyroom');
+              Navigator.pushReplacementNamed(context, '/profile');
               break;
           }
         },
@@ -1101,7 +949,7 @@ class _LessonScreenState extends State<LessonScreen> {
   }
 }
 
-// BUDDIES_001_INITIAL: Buddies Screen widget for connecting with users
+// BUDDIES_001_INITIAL: Buddies Screen widget
 class BuddiesScreen extends StatefulWidget {
   const BuddiesScreen({Key? key}) : super(key: key);
 
@@ -1117,22 +965,47 @@ class _BuddiesScreenState extends State<BuddiesScreen> {
   @override
   void initState() {
     super.initState();
-    buddies = user.buddies;
+    buddies = [
+      {
+        'name': 'Amina',
+        'interests': 'Physics, 21st Century Skills',
+        'points': 300,
+        'status': 'Online',
+      },
+      {
+        'name': 'Rahim',
+        'interests': 'Entrepreneurial Thinking, Civic Responsibilities',
+        'points': 450,
+        'status': 'Offline',
+      },
+      {
+        'name': 'Fatima',
+        'interests': 'Physics, Digital Literacy',
+        'points': 200,
+        'status': 'Online',
+      },
+      {
+        'name': 'Nurul',
+        'interests': 'Civic Responsibilities, Critical Thinking',
+        'points': 350,
+        'status': 'Offline',
+      },
+    ];
   }
 
   void swipeLeft() {
-    setState(() {
-      currentBuddyIndex = (currentBuddyIndex + 1) % buddies.length;
-    });
+    setState(
+      () => currentBuddyIndex = (currentBuddyIndex + 1) % buddies.length,
+    );
   }
 
   Future<void> swipeRight() async {
     try {
-      await user.addBuddy(buddies[currentBuddyIndex]);
+      await user.updatePoints(-20);
       if (!mounted) return;
-      setState(() {
-        currentBuddyIndex = (currentBuddyIndex + 1) % buddies.length;
-      });
+      setState(
+        () => currentBuddyIndex = (currentBuddyIndex + 1) % buddies.length,
+      );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(
@@ -1143,11 +1016,7 @@ class _BuddiesScreenState extends State<BuddiesScreen> {
 
   Future<void> removeBuddy(String buddyName) async {
     try {
-      await user.removeBuddy(buddyName);
-      if (!mounted) return;
-      setState(() {
-        buddies = user.buddies;
-      });
+      setState(() => buddies.removeWhere((b) => b['name'] == buddyName));
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(
@@ -1159,11 +1028,10 @@ class _BuddiesScreenState extends State<BuddiesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // BUDDIES_002_INITIAL: App bar with navigation and notifications
       appBar: buildAppBar(context, title: 'Study Buddies'),
       drawer: buildDrawer(context),
       body: SingleChildScrollView(
-        padding: EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16),
         child: Column(
           children: [
             Text(
@@ -1174,12 +1042,12 @@ class _BuddiesScreenState extends State<BuddiesScreen> {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             Card(
               color: BrandColors.darkGray,
               elevation: 4,
               child: Padding(
-                padding: EdgeInsets.all(16.0),
+                padding: const EdgeInsets.all(16),
                 child: Column(
                   children: [
                     Text(
@@ -1190,7 +1058,7 @@ class _BuddiesScreenState extends State<BuddiesScreen> {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    SizedBox(height: 10),
+                    const SizedBox(height: 10),
                     Text(
                       'Interests: ${buddies[currentBuddyIndex]['interests']}',
                       style: TextStyle(
@@ -1209,7 +1077,7 @@ class _BuddiesScreenState extends State<BuddiesScreen> {
                 ),
               ),
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -1217,34 +1085,40 @@ class _BuddiesScreenState extends State<BuddiesScreen> {
                   onPressed: swipeLeft,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: BrandColors.teal,
-                    padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 12,
+                      horizontal: 24,
+                    ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(25),
                     ),
                   ),
-                  child: Text(
+                  child: const Text(
                     'Pass',
                     style: TextStyle(color: BrandColors.white, fontSize: 16),
                   ),
                 ),
-                SizedBox(width: 20),
+                const SizedBox(width: 20),
                 ElevatedButton(
                   onPressed: swipeRight,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: BrandColors.lightTeal,
-                    padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 12,
+                      horizontal: 24,
+                    ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(25),
                     ),
                   ),
-                  child: Text(
+                  child: const Text(
                     'Connect (20 points)',
                     style: TextStyle(color: BrandColors.white, fontSize: 16),
                   ),
                 ),
               ],
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             Text(
               'My Buddies',
               style: TextStyle(
@@ -1255,9 +1129,10 @@ class _BuddiesScreenState extends State<BuddiesScreen> {
             ),
             ListView.builder(
               shrinkWrap: true,
-              itemCount: user.buddies.length,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: buddies.length,
               itemBuilder: (context, index) {
-                final buddyName = user.buddies[index]['name'] as String;
+                final buddyName = buddies[index]['name'] as String;
                 return Card(
                   color: BrandColors.darkGray,
                   elevation: 4,
@@ -1267,14 +1142,14 @@ class _BuddiesScreenState extends State<BuddiesScreen> {
                       style: TextStyle(color: BrandColors.white),
                     ),
                     trailing: IconButton(
-                      icon: Icon(Icons.delete, color: BrandColors.teal),
+                      icon: const Icon(Icons.delete, color: BrandColors.teal),
                       onPressed: () => removeBuddy(buddyName),
                     ),
                   ),
                 );
               },
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             Text(
               'Chat with Buddies',
               style: TextStyle(
@@ -1291,20 +1166,20 @@ class _BuddiesScreenState extends State<BuddiesScreen> {
               ),
               dropdownColor: BrandColors.darkGray,
               items:
-                  user.buddies.map((buddy) {
-                    return DropdownMenuItem<String>(
-                      value: buddy['name'] as String,
-                      child: Text(
-                        buddy['name'] as String,
-                        style: TextStyle(color: BrandColors.white),
-                      ),
-                    );
-                  }).toList(),
-              onChanged: (String? newValue) {
-                setState(() {});
-              },
+                  buddies
+                      .map(
+                        (buddy) => DropdownMenuItem<String>(
+                          value: buddy['name'] as String,
+                          child: Text(
+                            buddy['name'] as String,
+                            style: TextStyle(color: BrandColors.white),
+                          ),
+                        ),
+                      )
+                      .toList(),
+              onChanged: (String? newValue) => setState(() {}),
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             Container(
               height: 150,
               decoration: BoxDecoration(
@@ -1312,8 +1187,8 @@ class _BuddiesScreenState extends State<BuddiesScreen> {
                 borderRadius: BorderRadius.circular(8),
               ),
               child: ListView(
-                padding: EdgeInsets.all(8.0),
-                children: [
+                padding: const EdgeInsets.all(8),
+                children: const [
                   Text(
                     'Buddy (Mock): Great point! Let\'s discuss more.',
                     style: TextStyle(color: BrandColors.lightGray),
@@ -1325,7 +1200,7 @@ class _BuddiesScreenState extends State<BuddiesScreen> {
                 ],
               ),
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             Row(
               children: [
                 Expanded(
@@ -1350,7 +1225,7 @@ class _BuddiesScreenState extends State<BuddiesScreen> {
                     style: TextStyle(color: BrandColors.white),
                   ),
                 ),
-                SizedBox(width: 10),
+                const SizedBox(width: 10),
                 ElevatedButton(
                   onPressed:
                       () => ScaffoldMessenger.of(context).showSnackBar(
@@ -1358,23 +1233,25 @@ class _BuddiesScreenState extends State<BuddiesScreen> {
                       ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: BrandColors.lightTeal,
-                    padding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 12,
+                      horizontal: 16,
+                    ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(25),
                     ),
                   ),
-                  child: Icon(Icons.send, color: BrandColors.white),
+                  child: const Icon(Icons.send, color: BrandColors.white),
                 ),
               ],
             ),
           ],
         ),
       ),
-      // BUDDIES_003_INITIAL: Bottom navigation bar for persistent navigation
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: BrandColors.darkTeal,
-        unselectedItemColor: BrandColors.white,
-        selectedItemColor: BrandColors.lightTeal,
+        selectedItemColor: BrandColors.white,
+        unselectedItemColor: BrandColors.lightGray,
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
           BottomNavigationBarItem(
@@ -1392,7 +1269,7 @@ class _BuddiesScreenState extends State<BuddiesScreen> {
               Navigator.pushReplacementNamed(context, '/progress');
               break;
             case 2:
-              Navigator.pushReplacementNamed(context, '/studyroom');
+              Navigator.pushReplacementNamed(context, '/profile');
               break;
           }
         },
@@ -1401,11 +1278,10 @@ class _BuddiesScreenState extends State<BuddiesScreen> {
   }
 }
 
-// GAMES_001_INITIAL: Games Screen widget for mini-games
+// GAMES_001_INITIAL: Games Screen widget
 class GamesScreen extends StatelessWidget {
   const GamesScreen({Key? key}) : super(key: key);
 
-  // GAMES_002_INITIAL: Build game card for grid display
   Widget _buildGameCard(
     String title,
     String description,
@@ -1420,7 +1296,7 @@ class GamesScreen extends StatelessWidget {
               context,
             ).showSnackBar(SnackBar(content: Text('Playing $title...'))),
         child: Padding(
-          padding: EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -1432,12 +1308,12 @@ class GamesScreen extends StatelessWidget {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              SizedBox(height: 8),
+              const SizedBox(height: 8),
               Text(
                 description,
                 style: TextStyle(color: BrandColors.lightGray, fontSize: 14),
               ),
-              SizedBox(height: 10),
+              const SizedBox(height: 10),
               ElevatedButton(
                 onPressed: () async {
                   try {
@@ -1468,12 +1344,15 @@ class GamesScreen extends StatelessWidget {
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: BrandColors.lightTeal,
-                  padding: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 8,
+                    horizontal: 16,
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(25),
                   ),
                 ),
-                child: Text(
+                child: const Text(
                   'Play',
                   style: TextStyle(color: BrandColors.white, fontSize: 14),
                 ),
@@ -1488,11 +1367,10 @@ class GamesScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // GAMES_003_INITIAL: App bar with navigation and notifications
       appBar: buildAppBar(context, title: 'Mini-Games'),
       drawer: buildDrawer(context),
       body: SingleChildScrollView(
-        padding: EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16),
         child: Column(
           children: [
             Text(
@@ -1503,11 +1381,11 @@ class GamesScreen extends StatelessWidget {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             GridView.count(
               crossAxisCount: 1,
               shrinkWrap: true,
-              physics: NeverScrollableScrollPhysics(),
+              physics: const NeverScrollableScrollPhysics(),
               crossAxisSpacing: 10,
               mainAxisSpacing: 10,
               children: [
@@ -1531,11 +1409,10 @@ class GamesScreen extends StatelessWidget {
           ],
         ),
       ),
-      // GAMES_004_INITIAL: Bottom navigation bar for persistent navigation
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: BrandColors.darkTeal,
-        unselectedItemColor: BrandColors.white,
-        selectedItemColor: BrandColors.lightTeal,
+        selectedItemColor: BrandColors.white,
+        unselectedItemColor: BrandColors.lightGray,
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
           BottomNavigationBarItem(
@@ -1553,7 +1430,7 @@ class GamesScreen extends StatelessWidget {
               Navigator.pushReplacementNamed(context, '/progress');
               break;
             case 2:
-              Navigator.pushReplacementNamed(context, '/studyroom');
+              Navigator.pushReplacementNamed(context, '/profile');
               break;
           }
         },
@@ -1562,19 +1439,18 @@ class GamesScreen extends StatelessWidget {
   }
 }
 
-// PROGRESS_001_INITIAL: Progress Screen widget for user progress tracking
+// PROGRESS_001_INITIAL: Progress Screen widget
 class ProgressScreen extends StatelessWidget {
   const ProgressScreen({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    final UserState user = UserState();
+    final user = UserState();
     return Scaffold(
-      // PROGRESS_002_INITIAL: App bar with navigation and notifications
       appBar: buildAppBar(context, title: 'Dashboard'),
       drawer: buildDrawer(context),
       body: SingleChildScrollView(
-        padding: EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -1586,51 +1462,43 @@ class ProgressScreen extends StatelessWidget {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             Card(
               color: BrandColors.darkGray,
               elevation: 4,
               child: Padding(
-                padding: EdgeInsets.all(16.0),
+                padding: const EdgeInsets.all(16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       'Tier: ${user.tier}',
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: BrandColors.white,
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    SizedBox(height: 10),
+                    const SizedBox(height: 10),
                     Text(
                       'Points: ${user.points.toString().padLeft(5, "0")}',
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: BrandColors.lightGray,
                         fontSize: 16,
                       ),
                     ),
-                    SizedBox(height: 10),
+                    const SizedBox(height: 10),
                     LinearProgressIndicator(
                       value: user.points / 700,
                       backgroundColor: BrandColors.mediumGray,
                       color: BrandColors.lightTeal,
                       minHeight: 10,
                     ),
-                    SizedBox(height: 10),
-                    Text(
-                      'To reach ${user.tier == "Scholar" ? "Master" : user.tier + " Plus"}: ${700 - user.points} more points',
-                      style: TextStyle(
-                        color: BrandColors.lightGray,
-                        fontSize: 14,
-                      ),
-                    ),
                   ],
                 ),
               ),
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             Text(
               'Achievements',
               style: TextStyle(
@@ -1639,7 +1507,7 @@ class ProgressScreen extends StatelessWidget {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             ...user.achievements.map(
               (achievement) => Card(
                 color: BrandColors.darkGray,
@@ -1656,7 +1524,7 @@ class ProgressScreen extends StatelessWidget {
                 ),
               ),
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             Text(
               'Recent Activity',
               style: TextStyle(
@@ -1665,7 +1533,7 @@ class ProgressScreen extends StatelessWidget {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             Card(
               color: BrandColors.darkGray,
               elevation: 4,
@@ -1691,11 +1559,10 @@ class ProgressScreen extends StatelessWidget {
           ],
         ),
       ),
-      // PROGRESS_003_INITIAL: Bottom navigation bar for persistent navigation
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: BrandColors.darkTeal,
-        unselectedItemColor: BrandColors.white,
-        selectedItemColor: BrandColors.lightTeal,
+        selectedItemColor: BrandColors.white,
+        unselectedItemColor: BrandColors.lightGray,
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
           BottomNavigationBarItem(
@@ -1713,7 +1580,7 @@ class ProgressScreen extends StatelessWidget {
               Navigator.pushReplacementNamed(context, '/progress');
               break;
             case 2:
-              Navigator.pushReplacementNamed(context, '/studyroom');
+              Navigator.pushReplacementNamed(context, '/profile');
               break;
           }
         },
@@ -1722,11 +1589,10 @@ class ProgressScreen extends StatelessWidget {
   }
 }
 
-// MARKETPLACE_001_INITIAL: Marketplace Screen widget for purchasing items
+// MARKETPLACE_001_INITIAL: Marketplace Screen widget
 class MarketplaceScreen extends StatelessWidget {
   const MarketplaceScreen({Key? key}) : super(key: key);
 
-  // MARKETPLACE_002_INITIAL: Build marketplace item card for grid display
   Widget _buildMarketplaceItem(
     String title,
     String description,
@@ -1741,7 +1607,7 @@ class MarketplaceScreen extends StatelessWidget {
               context,
             ).showSnackBar(SnackBar(content: Text('Purchasing $title...'))),
         child: Padding(
-          padding: EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -1753,12 +1619,12 @@ class MarketplaceScreen extends StatelessWidget {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              SizedBox(height: 8),
+              const SizedBox(height: 8),
               Text(
                 description,
                 style: TextStyle(color: BrandColors.lightGray, fontSize: 14),
               ),
-              SizedBox(height: 10),
+              const SizedBox(height: 10),
               ElevatedButton(
                 onPressed: () async {
                   try {
@@ -1777,12 +1643,15 @@ class MarketplaceScreen extends StatelessWidget {
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: BrandColors.lightTeal,
-                  padding: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 8,
+                    horizontal: 16,
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(25),
                   ),
                 ),
-                child: Text(
+                child: const Text(
                   'Buy',
                   style: TextStyle(color: BrandColors.white, fontSize: 14),
                 ),
@@ -1797,11 +1666,10 @@ class MarketplaceScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // MARKETPLACE_003_INITIAL: App bar with navigation and notifications
       appBar: buildAppBar(context, title: 'Marketplace'),
       drawer: buildDrawer(context),
       body: SingleChildScrollView(
-        padding: EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16),
         child: Column(
           children: [
             Text(
@@ -1812,7 +1680,7 @@ class MarketplaceScreen extends StatelessWidget {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             SizedBox(
               height: 140,
               child: ListView.builder(
@@ -1821,7 +1689,7 @@ class MarketplaceScreen extends StatelessWidget {
                 itemBuilder: (context, index) {
                   return Container(
                     width: 200,
-                    margin: EdgeInsets.only(right: 16.0),
+                    margin: const EdgeInsets.only(right: 16),
                     decoration: BoxDecoration(
                       color: BrandColors.lightTeal,
                       borderRadius: BorderRadius.circular(12),
@@ -1839,11 +1707,11 @@ class MarketplaceScreen extends StatelessWidget {
                 },
               ),
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             GridView.count(
               crossAxisCount: 1,
               shrinkWrap: true,
-              physics: NeverScrollableScrollPhysics(),
+              physics: const NeverScrollableScrollPhysics(),
               crossAxisSpacing: 10,
               mainAxisSpacing: 10,
               children: [
@@ -1869,7 +1737,7 @@ class MarketplaceScreen extends StatelessWidget {
                 ),
               ],
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             Text(
               'Premium users can purchase items with real money via bKash or card!',
               style: TextStyle(fontSize: 14, color: BrandColors.lightGray),
@@ -1877,11 +1745,10 @@ class MarketplaceScreen extends StatelessWidget {
           ],
         ),
       ),
-      // MARKETPLACE_004_INITIAL: Bottom navigation bar for persistent navigation
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: BrandColors.darkTeal,
-        unselectedItemColor: BrandColors.white,
-        selectedItemColor: BrandColors.lightTeal,
+        selectedItemColor: BrandColors.white,
+        unselectedItemColor: BrandColors.lightGray,
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
           BottomNavigationBarItem(
@@ -1899,7 +1766,7 @@ class MarketplaceScreen extends StatelessWidget {
               Navigator.pushReplacementNamed(context, '/progress');
               break;
             case 2:
-              Navigator.pushReplacementNamed(context, '/studyroom');
+              Navigator.pushReplacementNamed(context, '/profile');
               break;
           }
         },
@@ -1908,19 +1775,18 @@ class MarketplaceScreen extends StatelessWidget {
   }
 }
 
-// STUDYROOM_001_INITIAL: Study Room Screen widget for displaying user achievements
+// STUDYROOM_001_INITIAL: Study Room Screen widget
 class StudyRoomScreen extends StatelessWidget {
   const StudyRoomScreen({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    final UserState user = UserState();
+    final user = UserState();
     return Scaffold(
-      // STUDYROOM_002_INITIAL: App bar with navigation and notifications
       appBar: buildAppBar(context, title: 'Study Room'),
       drawer: buildDrawer(context),
       body: SingleChildScrollView(
-        padding: EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -1932,7 +1798,7 @@ class StudyRoomScreen extends StatelessWidget {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             Text(
               'Achievements',
               style: TextStyle(
@@ -1941,7 +1807,7 @@ class StudyRoomScreen extends StatelessWidget {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             ...user.achievements.map(
               (achievement) => Card(
                 color: BrandColors.darkGray,
@@ -1958,7 +1824,7 @@ class StudyRoomScreen extends StatelessWidget {
                 ),
               ),
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             Text(
               'Badges',
               style: TextStyle(
@@ -1967,7 +1833,7 @@ class StudyRoomScreen extends StatelessWidget {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             Card(
               color: BrandColors.darkGray,
               elevation: 4,
@@ -1990,7 +1856,7 @@ class StudyRoomScreen extends StatelessWidget {
                 trailing: Icon(Icons.badge, color: BrandColors.lightTeal),
               ),
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             Text(
               'Marketplace Items',
               style: TextStyle(
@@ -1999,7 +1865,7 @@ class StudyRoomScreen extends StatelessWidget {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             ...user.items.map(
               (item) => Card(
                 color: BrandColors.darkGray,
@@ -2013,11 +1879,10 @@ class StudyRoomScreen extends StatelessWidget {
           ],
         ),
       ),
-      // STUDYROOM_003_INITIAL: Bottom navigation bar for persistent navigation
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: BrandColors.darkTeal,
-        unselectedItemColor: BrandColors.white,
-        selectedItemColor: BrandColors.lightTeal,
+        selectedItemColor: BrandColors.white,
+        unselectedItemColor: BrandColors.lightGray,
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
           BottomNavigationBarItem(
@@ -2035,7 +1900,7 @@ class StudyRoomScreen extends StatelessWidget {
               Navigator.pushReplacementNamed(context, '/progress');
               break;
             case 2:
-              Navigator.pushReplacementNamed(context, '/studyroom');
+              Navigator.pushReplacementNamed(context, '/profile');
               break;
           }
         },
@@ -2052,13 +1917,12 @@ class PlaceholderScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // PLACEHOLDER_002_INITIAL: App bar with navigation and notifications
       appBar: buildAppBar(context, title: title),
       drawer: buildDrawer(context),
       body: Center(
         child: Text(
           'This is the $title screen',
-          style: TextStyle(fontSize: 20, color: BrandColors.white),
+          style: const TextStyle(fontSize: 20, color: BrandColors.veryDarkGray),
         ),
       ),
     );
